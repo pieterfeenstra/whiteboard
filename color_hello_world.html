@@ -1,76 +1,70 @@
 <!doctype html>
 <html>
+
 <head>
-  <meta charset="utf-8">
-  <title>tracking.js - color hello world</title>
+    <meta charset="utf-8">
+    <title>Extract the sticky notes from image</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- TRACKING LIBRARY -->
+    <script src="tracking-min.js"></script>
+    <!-- OCR LIBRARY JS -->
+    <!-- function is commented below  -->
+    <!-- <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script> -->
 
-
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-<!-- TRACKING LIBRARY -->
-  <script src="tracking-min.js"></script>
-
-<!-- OCR LIBRARY JS -->
-<!-- function is commented below  -->
-<!-- <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script> -->
-
-  <style>
-  * {
-    margin: 0;
-    padding: 0;
-    font-family: Helvetica, Arial, sans-serif;
-  }
-  a{
-    padding: 20px 20px;
-    font-size: 50px;
-  }
-
-  /*set size of original image to detect the stickynotes*/
-  /*todo set size when loaded*/
-  .demo-container {
-    width: 4476px;
-    height: 2972px;
-    position: relative;
-    background: #eee;
-    overflow: hidden;
-    border-bottom-right-radius: 10px;
-    border-bottom-left-radius: 10px;
-  }
-
-  .dg.ac {
-    z-index: 100 !important;
-    top: 50px !important;
-  }
-
-
-
-    .rect {
-      width: 80px;
-      height: 80px;
-      position: absolute;
-      left: -1000px;
-      top: -1000px;
-    }
-
-    .col-md-3{
-      margin:30px 30px;
-    }
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+        
+        a {
+            padding: 20px 20px;
+            font-size: 50px;
+        }
+        /*set size of original image to detect the stickynotes*/
+        /*todo set size when loaded*/
+        
+        .demo-container {
+            width: 4476px;
+            height: 2972px;
+            position: relative;
+            background: #eee;
+            overflow: hidden;
+            border-bottom-right-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+        
+        .dg.ac {
+            z-index: 100 !important;
+            top: 50px !important;
+        }
+        
+        .rect {
+            width: 80px;
+            height: 80px;
+            position: absolute;
+            left: -1000px;
+            top: -1000px;
+        }
+        
+        .col-md-3 {
+            margin: 30px 30px;
+        }
     </style>
 
 </head>
+
 <body>
 
-  <div class="demo-container">
-  <canvas id="myCanvas" width="4476" height="2972"></canvas>
-</div>
-     <script>
-
-
-
-       var canvas = document.getElementById('myCanvas');
-       var demoContainer = document.querySelector('.demo-container');
-       var context = canvas.getContext('2d');
-       var imageObj = new Image();
+    <div class="demo-container">
+        <canvas id="myCanvas" width="4476" height="2972"></canvas>
+    </div>
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var demoContainer = document.querySelector('.demo-container');
+        var context = canvas.getContext('2d');
+        var imageObj = new Image();
 
         //  if there is no imagewidthand height the error occurs in console
         // Check imagesize  and correct the width an height listed below.
@@ -78,96 +72,93 @@
         imageObj.height = 2972;
         imageObj.src = 'board.jpg';
         imageObj.onload = function() {
-        context.drawImage(imageObj, 0, 0);
-         };
-
-
-
-// Register new colors
-//TODO pick colors from image before running
-tracking.ColorTracker.registerColor('green', function(r, g, b) {
-  if (r > 120 && r < 140 && g > 155 && g < 170 && b < 50) {
-    return true;
-  }
-  return false;
-});
-
-tracking.ColorTracker.registerColor('orange', function(r, g, b) {
-  if (r > 150 && r < 200 && g > 110 && g < 140 && b < 50) {
-    return true;
-  }
-  return false;
-});
-
-
-  var colors = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'orange', 'green' ]);
-
-  colors.on('track', function(event) {
-    if (event.data.length === 0) {
-      console.log('no colors were detected')
-    } else {
-        event.data.forEach(function(rect) {
-        // filter wrong small sized rectangles
-        if (rect.height > 350 && rect.width > 350){
-        console.log('Postit coordinates X:' + rect.x + ' Y:' + rect.y + ' H:' + rect.height + ' W:' + rect.width + ' Color:' + rect.color );
-       window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
-
-       //Make a Canvas to copy the data you would like to download to
-       var hidden_canv = document.createElement('canvas');
-       hidden_canv.style.display = 'none';
-       document.body.appendChild(hidden_canv);
-       hidden_canv.width = rect.width;
-       hidden_canv.height = rect.height;
-
-       //Draw the data you want to download to the hidden canvas
-       var hidden_ctx = hidden_canv.getContext('2d');
-       hidden_ctx.drawImage(
-       myCanvas,
-       rect.x,//Start Clipping
-       rect.y,//Start Clipping
-       rect.width,//Clipping Width
-       rect.height,//Clipping Height
-       0,//Place X
-       0,//Place Y
-       hidden_canv.width,//Place Width
-       hidden_canv.height//Place Height
-       );
-
-       //Create a download URL for the data
-       var hidden_data = hidden_canv.toDataURL("image/png").replace("image/png", "image/octet-stream");
-    // UNCOMMENT FOR THE text from sticky note
-    //   Tesseract.recognize(hidden_data)
-    //   .then(function(result){
-    //   console.log(result.text);
-    // });
-
-       //Make a download link
-       var downloadDiv = document.createElement('div');
-       downloadDiv.classList = "col-md-2";
-
-       var downloadAnchor = document.createElement('a');
-       downloadAnchor.setAttribute('download', rect.color + '.png');
-       downloadAnchor.innerHTML = "Download the " + rect.color + " Square!";
-       downloadAnchor.setAttribute('href', hidden_data);
-       document.body.appendChild(downloadAnchor);
-        downloadDiv.appendChild(downloadAnchor);
-        document.body.appendChild(downloadDiv);
-     }
-      });
-    }
-  });
-// executes the function
-  tracking.track(imageObj , colors);
-  window.plot = function(x, y, w, h, color) {
-          var rect = document.createElement('div');
-          document.querySelector('.demo-container').appendChild(rect);
-          rect.classList.add('rect');
-          rect.style.border = '10px solid ' + 'red';
-          rect.style.width = w + 'px';
-          rect.style.height = h + 'px';
-          rect.style.left = x + 'px';
-          rect.style.top =  y + 'px';
+            context.drawImage(imageObj, 0, 0);
         };
-  </script>
+
+      // Register new colors
+        //TODO pick colors from image before running
+        tracking.ColorTracker.registerColor('green', function(r, g, b) {
+            if (r > 120 && r < 140 && g > 155 && g < 170 && b < 50) {
+                return true;
+            }
+            return false;
+        });
+
+        tracking.ColorTracker.registerColor('orange', function(r, g, b) {
+            if (r > 150 && r < 200 && g > 110 && g < 140 && b < 50) {
+                return true;
+            }
+            return false;
+        });
+      
+        var colors = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'orange', 'green']);
+        colors.on('track', function(event) {
+            if (event.data.length === 0) {
+                console.log('no colors were detected')
+            } else {
+                event.data.forEach(function(rect) {
+                    // filter wrong small sized rectangles
+                    if (rect.height > 350 && rect.width > 350) {
+                        console.log('Postit coordinates X:' + rect.x + ' Y:' + rect.y + ' H:' + rect.height + ' W:' + rect.width + ' Color:' + rect.color);
+                        window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
+
+                        //Make a Canvas to copy the data you would like to download to
+                        var hidden_canv = document.createElement('canvas');
+                        hidden_canv.style.display = 'none';
+                        document.body.appendChild(hidden_canv);
+                        hidden_canv.width = rect.width;
+                        hidden_canv.height = rect.height;
+
+                        //Draw the data you want to download to the hidden canvas
+                        var hidden_ctx = hidden_canv.getContext('2d');
+                        hidden_ctx.drawImage(
+                            myCanvas,
+                            rect.x, //Start Clipping
+                            rect.y, //Start Clipping
+                            rect.width, //Clipping Width
+                            rect.height, //Clipping Height
+                            0, //Place X
+                            0, //Place Y
+                            hidden_canv.width, //Place Width
+                            hidden_canv.height //Place Height
+                        );
+
+                        //Create a download URL for the data
+                        var hidden_data = hidden_canv.toDataURL("image/png").replace("image/png", "image/octet-stream");
+                        // UNCOMMENT FOR THE text from sticky note
+                        //   Tesseract.recognize(hidden_data)
+                        //   .then(function(result){
+                        //   console.log(result.text);
+                        // });
+
+                        //Make a download link
+                        var downloadDiv = document.createElement('div');
+                        downloadDiv.classList = "col-md-2";
+
+                        var downloadAnchor = document.createElement('a');
+                        downloadAnchor.setAttribute('download', rect.color + '.png');
+                        downloadAnchor.innerHTML = "Download the " + rect.color + " Square!";
+                        downloadAnchor.setAttribute('href', hidden_data);
+                        document.body.appendChild(downloadAnchor);
+                        downloadDiv.appendChild(downloadAnchor);
+                        document.body.appendChild(downloadDiv);
+                    }
+                });
+            }
+        });
+        // executes the function
+        tracking.track(imageObj, colors);
+        window.plot = function(x, y, w, h, color) {
+            var rect = document.createElement('div');
+            document.querySelector('.demo-container').appendChild(rect);
+            rect.classList.add('rect');
+            rect.style.border = '10px solid ' + 'red';
+            rect.style.width = w + 'px';
+            rect.style.height = h + 'px';
+            rect.style.left = x + 'px';
+            rect.style.top = y + 'px';
+        };
+    </script>
 </body>
+
 </html>
