@@ -3,10 +3,14 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Extract the sticky notes from image</title>
+    <title>tracking.js - color hello world</title>
+
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
     <!-- TRACKING LIBRARY -->
-    <script src="tracking-min.js"></script>
+    <script src="tracking.js"></script>
+
     <!-- OCR LIBRARY JS -->
     <!-- function is commented below  -->
     <!-- <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script> -->
@@ -17,14 +21,14 @@
             padding: 0;
             font-family: Helvetica, Arial, sans-serif;
         }
-        
+
         a {
             padding: 20px 20px;
             font-size: 50px;
         }
         /*set size of original image to detect the stickynotes*/
         /*todo set size when loaded*/
-        
+
         .demo-container {
             width: 4476px;
             height: 2972px;
@@ -34,12 +38,12 @@
             border-bottom-right-radius: 10px;
             border-bottom-left-radius: 10px;
         }
-        
+
         .dg.ac {
             z-index: 100 !important;
             top: 50px !important;
         }
-        
+
         .rect {
             width: 80px;
             height: 80px;
@@ -47,20 +51,32 @@
             left: -1000px;
             top: -1000px;
         }
-        
+
         .col-md-3 {
             margin: 30px 30px;
         }
+
+
     </style>
 
 </head>
 
 <body>
+  <nav class="navbar navbar-default navbar-static-top">
+  <div class="container">
+    <button class="btn btn-lg" onclick="downloadAll(window.downloadLinks , window.rectColor)">download All selected images</button>
+
+  </div>
+</nav>
 
     <div class="demo-container">
         <canvas id="myCanvas" width="4476" height="2972"></canvas>
     </div>
+
     <script>
+        // array of dowloadlinks
+        var downloadLinks = [];
+        var rectColor = [];
         var canvas = document.getElementById('myCanvas');
         var demoContainer = document.querySelector('.demo-container');
         var context = canvas.getContext('2d');
@@ -72,33 +88,31 @@
         imageObj.height = 2972;
         imageObj.src = 'board.jpg';
         imageObj.onload = function() {
-            context.drawImage(imageObj, 0, 0);
+        context.drawImage(imageObj, 0, 0);
         };
 
-      // Register new colors
-        //TODO pick colors from image before running
-        tracking.ColorTracker.registerColor('green', function(r, g, b) {
-            if (r > 120 && r < 140 && g > 155 && g < 170 && b < 50) {
+
+
+        // Register new colors
+        // todo pick colors from image before running
+        tracking.ColorTracker.registerColor('orange', function(r, g, b) {
+            if (r > 140 && r < 220 && g > 90 && g < 150 && b < 50) {
                 return true;
             }
             return false;
         });
 
-        tracking.ColorTracker.registerColor('orange', function(r, g, b) {
-            if (r > 150 && r < 200 && g > 110 && g < 140 && b < 50) {
-                return true;
-            }
-            return false;
-        });
-      
-        var colors = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'orange', 'green']);
+
+        var colors = new tracking.ColorTracker(['orange','magenta', 'cyan', 'yellow']);
+        colors.setMinDimension(365);
+
         colors.on('track', function(event) {
             if (event.data.length === 0) {
                 console.log('no colors were detected')
             } else {
                 event.data.forEach(function(rect) {
                     // filter wrong small sized rectangles
-                    if (rect.height > 350 && rect.width > 350) {
+                    //if (rect.height > 350 && rect.width > 350) {
                         console.log('Postit coordinates X:' + rect.x + ' Y:' + rect.y + ' H:' + rect.height + ' W:' + rect.width + ' Color:' + rect.color);
                         window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
 
@@ -132,31 +146,57 @@
                         // });
 
                         //Make a download link
-                        var downloadDiv = document.createElement('div');
-                        downloadDiv.classList = "col-md-2";
+                        // var downloadDiv = document.createElement('div');
+                        // downloadDiv.classList = "col-md-2";
+                        //
+                        // var downloadAnchor = document.createElement('a');
+                        // downloadAnchor.setAttribute('download', rect.color + '.png');
+                        // downloadAnchor.innerHTML = "Download the " + rect.color + " Square!";
+                        // downloadAnchor.setAttribute('href', hidden_data);
+                        // document.body.appendChild(downloadAnchor);
+                        // downloadDiv.appendChild(downloadAnchor);
+                        // document.body.appendChild(downloadDiv);
 
-                        var downloadAnchor = document.createElement('a');
-                        downloadAnchor.setAttribute('download', rect.color + '.png');
-                        downloadAnchor.innerHTML = "Download the " + rect.color + " Square!";
-                        downloadAnchor.setAttribute('href', hidden_data);
-                        document.body.appendChild(downloadAnchor);
-                        downloadDiv.appendChild(downloadAnchor);
-                        document.body.appendChild(downloadDiv);
-                    }
+
+                        downloadLinks.push(hidden_data);
+                        rectColor.push(rect.color);
+
+                    //}
                 });
             }
         });
         // executes the function
         tracking.track(imageObj, colors);
+
+        console.log(downloadLinks);
+        console.log(rectColor);
         window.plot = function(x, y, w, h, color) {
             var rect = document.createElement('div');
             document.querySelector('.demo-container').appendChild(rect);
             rect.classList.add('rect');
-            rect.style.border = '10px solid ' + 'red';
+            rect.style.border = '10px solid ' + color;
             rect.style.width = w + 'px';
             rect.style.height = h + 'px';
             rect.style.left = x + 'px';
             rect.style.top = y + 'px';
+        };
+
+        // run trough images and download to downloads
+        var downloadAll = function(downloadLinks , rectColor){
+
+          for (var i = 0; i < downloadLinks.length; i++) {
+            var link = document.createElement('a');
+            link.setAttribute('download', rectColor[i] + '.png');
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.setAttribute('href', downloadLinks[i]);
+            link.click();
+
+
+          };
+
+
+
         };
     </script>
 </body>
