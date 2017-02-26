@@ -9,7 +9,7 @@ change the filename.
 
 register your own custom colours.
 
-download each dectected picture.
+press download button for each dectected picture.
 
 tested the app on a local webserver.
 
