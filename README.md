@@ -7,7 +7,7 @@ change the heights and width to the image.
 
 change the filename.
 
-register your own custom colours.
+register your own custom colours in the code.
 
 press download button for each dectected picture.
 
