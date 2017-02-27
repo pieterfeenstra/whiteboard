@@ -1,13 +1,8 @@
 # whiteboard
-tracks the sticky notes on a whiteboard.
-
-put your whiteboard image in the directory.
-
-change the heights and width to the image.
-
-change the filename.
-
-register your own custom colours in the code.
+Downloads the sticky notes on a whiteboard.
+1: select your image by the file selector
+2: register your own custom colours in the code.
+3: set minimumDimension of sticky notes.
 
 press download button for each dectected picture.
 
