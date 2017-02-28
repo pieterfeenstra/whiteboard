@@ -10,6 +10,7 @@ Downloads the sticky notes on a whiteboard.
 press download button for each dectected picture.
 
 tested the app on a local webserver.
+In progress : Colorpicker
 
 todo: register colors with colorpicker, and set minimumdimension function with a inputfield or drag function.
 
