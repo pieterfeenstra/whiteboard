@@ -3,14 +3,11 @@
 
 <head>
     <meta charset="utf-8">
-    <title>tracking.js - color hello world</title>
-
-
+    <title>Sticky Note Magic with tracking.js</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
     <!-- TRACKING LIBRARY -->
     <script src="tracking.js"></script>
-
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     <!-- OCR LIBRARY JS -->
     <!-- function is commented below  -->
     <!-- <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script> -->
@@ -22,16 +19,12 @@
             font-family: Helvetica, Arial, sans-serif;
         }
 
-        a {
-            padding: 20px 20px;
-            font-size: 50px;
-        }
-        /*set size of original image to detect the stickynotes*/
-        /*todo set size when loaded*/
+
 
         .demo-container {
-            width: 4476px;
-            height: 2972px;
+
+            /*width: 4476px;
+            height: 2972px;*/
             position: relative;
             background: #eee;
             overflow: hidden;
@@ -55,46 +48,68 @@
         .col-md-3 {
             margin: 30px 30px;
         }
+        .nav{
+          height:150px;
 
+        }
+
+        .navbar-brand{
+          font-size: 100px;
+        }
+        .navbar{
+          padding:50px;
+        }
 
     </style>
 
 </head>
-
 <body>
-  <nav class="navbar navbar-default navbar-static-top">
-  <div class="container">
-    <button class="btn btn-lg" onclick="downloadAll(window.downloadLinks , window.rectColor)">download All selected images</button>
+  <nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Sticky Note Magic</a>
+    </div>
+    <!-- Collect the nav links, forms, and other content for toggling -->
+       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+         <form class="navbar-form navbar-left">
+           <div class="form-group">
+                <div class="input-group">
+                  <input type="color" id="colorChoice"  onchange='registerCustomColor()'  value="#ff0000" />
+                  <input type='file' name="file" id="file" class="inputfile" accept='image/*' onchange='openFile(event)'>
+                </div>
+           </div>
+           <button type="submit"  class="btn btn-default" onclick="downloadAll(window.downloadLinks , window.rectColor)">download All selected images</button>
+         </form>
+       </div><!-- /.navbar-collapse -->
+     </div><!-- /.container-fluid -->
+   </nav>
 
-  </div>
-</nav>
 
     <div class="demo-container">
-        <canvas id="myCanvas" width="4476" height="2972"></canvas>
+
+
+
+      <!-- width="4476" height="2972" -->
+        <canvas id="myCanvas" width="500" height="400" ></canvas>
+
+
     </div>
 
+
     <script>
-        // array of dowloadlinks
+
+
+// array of dowloadlinks
         var downloadLinks = [];
         var rectColor = [];
-        var canvas = document.getElementById('myCanvas');
-        var demoContainer = document.querySelector('.demo-container');
-        var context = canvas.getContext('2d');
-        var imageObj = new Image();
-
-        //  if there is no imagewidthand height the error occurs in console
-        // Check imagesize  and correct the width an height listed below.
-        imageObj.width = 4476;
-        imageObj.height = 2972;
-        imageObj.src = 'board.jpg';
-        imageObj.onload = function() {
-        context.drawImage(imageObj, 0, 0);
-        };
+        var registerColorArray = ['orange','magenta', 'cyan', 'green' ];
 
 
 
-        // Register new colors
-        // todo pick colors from image before running
+
+// Register new colors
+// todo pick colors from image before running
         tracking.ColorTracker.registerColor('orange', function(r, g, b) {
             if (r > 140 && r < 220 && g > 90 && g < 150 && b < 50) {
                 return true;
@@ -102,21 +117,29 @@
             return false;
         });
 
+        tracking.ColorTracker.registerColor('green', function(r, g, b) {
+          if (r < 140 && g > 150 && b < 50) {
+              return true;
+          }
+              return false;
+          });
 
-        var colors = new tracking.ColorTracker(['orange','magenta', 'cyan', 'yellow']);
+// colors to track
+        var colors = new tracking.ColorTracker(registerColorArray);
+// set minimum rectangle size
+//todo set from canvas by dragging rectangle on screen
         colors.setMinDimension(365);
-
+// when registered color is detected this function is called
         colors.on('track', function(event) {
             if (event.data.length === 0) {
                 console.log('no colors were detected')
             } else {
                 event.data.forEach(function(rect) {
-                    // filter wrong small sized rectangles
-                    //if (rect.height > 350 && rect.width > 350) {
+
                         console.log('Postit coordinates X:' + rect.x + ' Y:' + rect.y + ' H:' + rect.height + ' W:' + rect.width + ' Color:' + rect.color);
                         window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
 
-                        //Make a Canvas to copy the data you would like to download to
+                        //Make a Canvas to copy the data you would like to download
                         var hidden_canv = document.createElement('canvas');
                         hidden_canv.style.display = 'none';
                         document.body.appendChild(hidden_canv);
@@ -139,37 +162,76 @@
 
                         //Create a download URL for the data
                         var hidden_data = hidden_canv.toDataURL("image/png").replace("image/png", "image/octet-stream");
-                        // UNCOMMENT FOR THE text from sticky note
+                        // push data to array for downloadAll()function
+                        downloadLinks.push(hidden_data);
+                        rectColor.push(rect.color);
+
+
+                        // UNCOMMENT FOR THE text from sticky note.
+                        // unreliable results!!!!! :(
                         //   Tesseract.recognize(hidden_data)
                         //   .then(function(result){
                         //   console.log(result.text);
                         // });
-
-                        //Make a download link
-                        // var downloadDiv = document.createElement('div');
-                        // downloadDiv.classList = "col-md-2";
-                        //
-                        // var downloadAnchor = document.createElement('a');
-                        // downloadAnchor.setAttribute('download', rect.color + '.png');
-                        // downloadAnchor.innerHTML = "Download the " + rect.color + " Square!";
-                        // downloadAnchor.setAttribute('href', hidden_data);
-                        // document.body.appendChild(downloadAnchor);
-                        // downloadDiv.appendChild(downloadAnchor);
-                        // document.body.appendChild(downloadDiv);
-
-
-                        downloadLinks.push(hidden_data);
-                        rectColor.push(rect.color);
-
-                    //}
                 });
             }
         });
-        // executes the function
-        tracking.track(imageObj, colors);
 
-        console.log(downloadLinks);
-        console.log(rectColor);
+
+// Selects the image and draws the image to a canvas.
+
+        var openFile = function(event){
+        var input = event.target;
+        var reader = new FileReader();
+        reader.onload = function(){
+          var dataURL = reader.result;
+          var canvas = document.getElementById('myCanvas');
+          // var demoContainer = document.querySelector('.demo-container');
+          var context = canvas.getContext('2d');
+          var imageObj = new Image();
+          imageObj.src = dataURL;
+          imageObj.onload = function() {
+            canvas.height = imageObj.height;
+            canvas.width = imageObj.width;
+          context.drawImage(imageObj, 0, 0);
+
+          tracking.track(imageObj, colors);
+          console.log(downloadLinks);
+          console.log(rectColor);
+          console.log(imageObj.height);
+          console.log(imageObj.width);
+          };
+        };
+        reader.readAsDataURL(input.files[0]);
+        };
+
+        var registerCustomColor = function(){
+            var hexColor = document.getElementById('colorChoice').value;
+            var r=0;
+            var g=0;
+            var b=0;
+              r = parseInt(hexColor.substr(1,2), 16);
+              g = parseInt(hexColor.substr(3,2), 16);
+              b = parseInt(hexColor.substr(5), 16);
+              console.log('r : ' + r + " g: " + g + " b: " + b);
+
+        
+
+
+
+        };
+
+      var hexToRgbConverter = function(colorhexs){
+        var r=0;
+        var g=0;
+        var b=0;
+          r = parseInt(colorhexs.substr(1,2), 16);
+          g = parseInt(colorhexs.substr(3,2), 16);
+          b = parseInt(colorhexs.substr(5), 16);
+          console.log('r : ' + r + " g: " + g + " b: " + b);
+      };
+
+        // create/plot the rectangle on cavas
         window.plot = function(x, y, w, h, color) {
             var rect = document.createElement('div');
             document.querySelector('.demo-container').appendChild(rect);
@@ -181,9 +243,8 @@
             rect.style.top = y + 'px';
         };
 
-        // run trough images and download to downloads
+        // loop trough images save to downloads
         var downloadAll = function(downloadLinks , rectColor){
-
           for (var i = 0; i < downloadLinks.length; i++) {
             var link = document.createElement('a');
             link.setAttribute('download', rectColor[i] + '.png');
@@ -191,12 +252,7 @@
             document.body.appendChild(link);
             link.setAttribute('href', downloadLinks[i]);
             link.click();
-
-
           };
-
-
-
         };
     </script>
 </body>
