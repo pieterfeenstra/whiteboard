@@ -3,14 +3,14 @@
 
 <head>
     <meta charset="utf-8">
-    <title>tracking.js - color hello world</title>
+    <title>Sticky Note Magic with tracking.js</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <!-- TRACKING LIBRARY -->
     <script src="tracking.js"></script>
     <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     <!-- OCR LIBRARY JS -->
     <!-- function is commented below  -->
-    <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script>
+    <!-- <script src='https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js'></script> -->
 
     <style>
         * {
@@ -59,6 +59,7 @@
         .navbar{
           padding:50px;
         }
+
     </style>
 
 </head>
@@ -74,11 +75,10 @@
          <form class="navbar-form navbar-left">
            <div class="form-group">
                 <div class="input-group">
-                  <input type="color"  value="#ff0000" />
+                  <input type="color" id="colorChoice"  onchange='registerCustomColor()'  value="#ff0000" />
                   <input type='file' name="file" id="file" class="inputfile" accept='image/*' onchange='openFile(event)'>
                 </div>
            </div>
-
            <button type="submit"  class="btn btn-default" onclick="downloadAll(window.downloadLinks , window.rectColor)">download All selected images</button>
          </form>
        </div><!-- /.navbar-collapse -->
@@ -88,15 +88,26 @@
 
     <div class="demo-container">
 
+
+
       <!-- width="4476" height="2972" -->
         <canvas id="myCanvas" width="500" height="400" ></canvas>
+
+
     </div>
+
+
     <script>
 
 
 // array of dowloadlinks
         var downloadLinks = [];
         var rectColor = [];
+        var registerColorArray = ['orange','magenta', 'cyan', 'green' ];
+
+
+
+
 // Register new colors
 // todo pick colors from image before running
         tracking.ColorTracker.registerColor('orange', function(r, g, b) {
@@ -112,8 +123,9 @@
           }
               return false;
           });
+
 // colors to track
-        var colors = new tracking.ColorTracker(['orange','magenta', 'cyan', 'green' ]);
+        var colors = new tracking.ColorTracker(registerColorArray);
 // set minimum rectangle size
 //todo set from canvas by dragging rectangle on screen
         colors.setMinDimension(365);
@@ -127,7 +139,7 @@
                         console.log('Postit coordinates X:' + rect.x + ' Y:' + rect.y + ' H:' + rect.height + ' W:' + rect.width + ' Color:' + rect.color);
                         window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
 
-                        //Make a Canvas to copy the data you would like to download to
+                        //Make a Canvas to copy the data you would like to download
                         var hidden_canv = document.createElement('canvas');
                         hidden_canv.style.display = 'none';
                         document.body.appendChild(hidden_canv);
@@ -192,6 +204,32 @@
         };
         reader.readAsDataURL(input.files[0]);
         };
+
+        var registerCustomColor = function(){
+            var hexColor = document.getElementById('colorChoice').value;
+            var r=0;
+            var g=0;
+            var b=0;
+              r = parseInt(hexColor.substr(1,2), 16);
+              g = parseInt(hexColor.substr(3,2), 16);
+              b = parseInt(hexColor.substr(5), 16);
+              console.log('r : ' + r + " g: " + g + " b: " + b);
+
+        
+
+
+
+        };
+
+      var hexToRgbConverter = function(colorhexs){
+        var r=0;
+        var g=0;
+        var b=0;
+          r = parseInt(colorhexs.substr(1,2), 16);
+          g = parseInt(colorhexs.substr(3,2), 16);
+          b = parseInt(colorhexs.substr(5), 16);
+          console.log('r : ' + r + " g: " + g + " b: " + b);
+      };
 
         // create/plot the rectangle on cavas
         window.plot = function(x, y, w, h, color) {
